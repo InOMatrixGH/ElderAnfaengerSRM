@@ -206,13 +206,13 @@ def konfigurieren():
     if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlerausgaben"]) == "FEHLER":
         print(Fore.RED + "Das Programm wird mit dem Defaultwert hellrot für Fehlernachrichten gestartet.")
     else:
-        FEHLER_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlernachrichten"])
+        FEHLER_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlerausgaben"])
 
     global BEFEHL_COL
     if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Eingabebefehle"]) == "FEHLER":
         print(Fore.RED + "Das Programm wird mit dem Defaultwert hellgelb für Befehle gestartet.")
     else:
-        BEFEHL_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Befehle in Texten"])
+        BEFEHL_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Eingabebefehle"])
 
     global TERMINAL_COL
     if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Terminalausgaben"]) == "FEHLER":
