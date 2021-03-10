@@ -15,7 +15,8 @@ config.read("terminalausgaben.ini", encoding="utf-8")
 
 # ==== Hilfsfunktionen für Ausgaben ====
 
-def kompiliere(text, standardfarbe=Fore.RESET):
+def setze_farbcodes(text, standardfarbe=Fore.RESET):
+    # Farbcodes \[Farbe]...[Farbe]\ werden übernommen.
     text = text.replace("\\[F]", FEHLER_COL).replace("[F]\\", standardfarbe)
     text = text.replace("\\[B]", BEFEHL_COL).replace("[B]\\", standardfarbe)
     text = text.replace("\\[P]", PLUGIN_COL).replace("[P]\\", standardfarbe)
@@ -23,7 +24,8 @@ def kompiliere(text, standardfarbe=Fore.RESET):
     return standardfarbe + text
 
 
-def entferne_formatierungen(text):
+def entferne_farbcodes(text):
+    # Farbcodes werden alle entfernt.
     text = text.replace(FEHLER_COL, "")
     text = text.replace(BEFEHL_COL, "")
     text = text.replace(PLUGIN_COL, "")
@@ -33,8 +35,9 @@ def entferne_formatierungen(text):
 
 
 def get_umbrueche_index(text, max_laenge):
-    text_unformatiert = entferne_formatierungen(text)
+    text_unformatiert = entferne_farbcodes(text)
 
+    # Index des Umbruches bestimmen für den Text ohne Farbcodes.
     if "\n" in text_unformatiert[:max_laenge + 1]:
         umbruch_unformatiert = text_unformatiert[:max_laenge + 1].find("\n")
     elif len(text_unformatiert) <= max_laenge:
@@ -42,6 +45,7 @@ def get_umbrueche_index(text, max_laenge):
     else:
         umbruch_unformatiert = text_unformatiert[:max_laenge + 1].rfind(" ")
 
+    # Bestimmen des Index für den Umbruch des normalen Textes.
     i = 0
     umbruch = umbruch_unformatiert
     for char in text_unformatiert[:umbruch_unformatiert]:
@@ -60,17 +64,21 @@ def get_umbrueche_index(text, max_laenge):
 def erstelle_tabelle(text):
     print(RAHMEN_COL + "+" + ("=" * (ZEILEN_LAENGE - 2)) + "+")
 
-    aufzaehlung = False
-    neue_zeile_in_terminalausgaben_ini = True
+    aufzaehlung = False                        # Wenn eine Zeile in der Konfigurationsdatei mit \* beginnt.
+    neue_zeile_in_terminalausgaben_ini = True  # Zeilenumbruch in der Konfigurationsdatei
 
     while text != "":
+        # Prüfen, ob die nächste Zeile in der Konfigdatei ein Aufzählungspunkt ist.
         if neue_zeile_in_terminalausgaben_ini:
-            if text[:2] == "\\#":
+            if text[:2] == "\\*":
                 aufzaehlung = True
                 text = text[2:]
             else:
                 aufzaehlung = False
 
+        # Nächste Ausgabe-Zeile schreiben. Dazu gibt ‘umbruch’ den Index an, bis zu dem ‘text’ ausgegeben wird.
+        # ‘umbruch_unformatiert’ ist der Index, bis zu dem ‘text’ formatiert ausgegene wird, wenn die Farbcodes
+        # entfernt wären.
         if aufzaehlung:
             [umbruch, umbruch_unformatiert] = get_umbrueche_index(text, max_laenge=ZEILEN_LAENGE - 15)
             leere = ZEILEN_LAENGE - umbruch_unformatiert - 11
@@ -84,6 +92,8 @@ def erstelle_tabelle(text):
             print(RAHMEN_COL + "|    " + Fore.RESET + text[:umbruch] + RAHMEN_COL + (" " * leere) + "|")
         neue_zeile_in_terminalausgaben_ini = False
 
+        # Falls der Umbruch in der Ausgabe wegen eines Umbruches in der Konfigdatei bedingt war, wird die Flag für
+        # eine neue Zeile in der Konfigdatei auf True gesetzt.
         if len(text) > umbruch and text[umbruch] == "\n":
             neue_zeile_in_terminalausgaben_ini = True
         text = text[umbruch + 1:]
@@ -97,12 +107,12 @@ def print_hrule():
     print(TERMINAL_COL + ("=" * ZEILEN_LAENGE) + Fore.RESET)
 
 
-def print_befehl_invalide():
-    print_fehler_nachricht("Standardausgaben", "Befehl invalide")
+def print_befehl_nur_nach_aufforderung():
+    print_fehler_nachricht("Standardausgaben", "Eingabe (nur nach Aufforderung)")
 
 
 def print_befehl_invalide_gebe_hilfe_ein():
-    print_fehler_nachricht("Standardausgaben", "Befehl invalide mit Hilfe")
+    print_fehler_nachricht("Standardausgaben", "Eingabe (fehlerhaft, hilfe eingeben)")
 
 
 def print_programm_wird_beendet():
@@ -113,15 +123,7 @@ def print_programm_ist_beendet():
     print_terminal_nachricht("Standardausgaben", "Programm ist beendet")
 
 
-def print_hauptprogramm_zurueck():
-    print_terminal_nachricht("Standardausgaben", "Hauptprogramm zurück")
-
-
-def print_hauptprogramm_beendet():
-    print_terminal_nachricht("Standardausgaben", "Hauptprogramm beendet")
-
-
-# ==== Individuelle Ausgaben von Plugins (müssen in Konf.-Datei stehen) ====
+# ==== Individuelle Ausgaben von Plugins (müssen in Konfig-Datei stehen) ====
 
 def print_fehler_nachricht(plugin, schluessel, args=None):
     text = config[plugin][schluessel]
@@ -131,7 +133,7 @@ def print_fehler_nachricht(plugin, schluessel, args=None):
 
     for arg in args:
         text = text.replace("\\[IN]\\", arg, 1)
-    print(kompiliere(text, FEHLER_COL) + Fore.RESET)
+    print(setze_farbcodes(text, FEHLER_COL) + Fore.RESET)
 
 
 def print_terminal_nachricht(plugin, schluessel, args=None):
@@ -142,21 +144,17 @@ def print_terminal_nachricht(plugin, schluessel, args=None):
 
     for arg in args:
         text = text.replace("\\[IN]\\", arg, 1)
-    print(kompiliere(text, TERMINAL_COL) + Fore.RESET)
+    print(setze_farbcodes(text, TERMINAL_COL) + Fore.RESET)
 
 
 def print_hilfe(plugin):
-    inhalt = kompiliere(config[plugin]["Hilfe"], Fore.RESET)
+    inhalt = setze_farbcodes(config[plugin]["Hilfe"], Fore.RESET)
     erstelle_tabelle(inhalt)
 
 
 def print_beschreibung(plugin):
-    inhalt = kompiliere("Willkommen bei \\[P]" + plugin + "[P]\\.\n" + config[plugin]["Beschreibung"], Fore.RESET)
+    inhalt = setze_farbcodes("Willkommen bei \\[P]" + plugin + "[P]\\.\n" + config[plugin]["Beschreibung"], Fore.RESET)
     erstelle_tabelle(inhalt)
-
-
-def get_kurzbeschreibung(plugin):
-    return kompiliere(config[plugin]["Kurzbeschreibung"], Fore.RESET)
 
 
 # ==== Lesen der Konfigurationsdatei ====
@@ -205,13 +203,13 @@ def konfigurieren():
         RAHMEN_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Tabellenrahmen"])
 
     global FEHLER_COL
-    if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlernachrichten"]) == "FEHLER":
+    if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlerausgaben"]) == "FEHLER":
         print(Fore.RED + "Das Programm wird mit dem Defaultwert hellrot für Fehlernachrichten gestartet.")
     else:
         FEHLER_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Fehlernachrichten"])
 
     global BEFEHL_COL
-    if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Befehle in Texten"]) == "FEHLER":
+    if to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Eingabebefehle"]) == "FEHLER":
         print(Fore.RED + "Das Programm wird mit dem Defaultwert hellgelb für Befehle gestartet.")
     else:
         BEFEHL_COL = to_color_code(config["Farben und Zeilenlänge von Tabellen"]["Befehle in Texten"])

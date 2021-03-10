@@ -1,4 +1,4 @@
-import time
+import time                           # Bestimmen der Reaktionszeit bei der Befehlseingabe in main()
 import pynput                         # Manipulation der Tastenanschläge (Drucken von [verkaufen] z.B.)
 import tkinter                        # Modul zum Öffnen und Erstellen von Fenstern (Grundstückseingabe)
 import pyperclip                      # Manipulation der Zwischenablage
@@ -150,15 +150,15 @@ def speichern_beenden(fenster, textfeld):
 
 
 def befehl_link_oeffnen():
-    print_terminal_nachricht("ElderAnfaengerSRM", "Link")
+    print_terminal_nachricht("ElderAnfaengerSRM", "Link (öffnen)")
     webbrowser.open_new_tab("git.eldercom.de")
 
 
 def befehl_grundstuecke_eingeben():
     if not stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Fenster bei Fluss")
+        print_fehler_nachricht("ElderAnfaengerSRM", "GS-Eingabe (Programm läuft)")
         return
-    print_terminal_nachricht("ElderAnfaengerSRM", "Fenster öffnen")
+    print_terminal_nachricht("ElderAnfaengerSRM", "GS-Eingabe (geöffnet)")
 
     # Fenstereigenschaften
     fenster = tkinter.Tk()
@@ -192,7 +192,7 @@ def befehl_grundstuecke_eingeben():
     fenster.mainloop()
 
     # Nach Schließen des Fensters
-    print_terminal_nachricht("ElderAnfaengerSRM", "Fenster geschlossen")
+    print_terminal_nachricht("ElderAnfaengerSRM", "GS-Eingabe (geschlossen)")
 
 
 def befehl_start():
@@ -202,19 +202,19 @@ def befehl_start():
     global kopier_thread
 
     if not stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Start bei Start")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Start (bereits gestartet)")
     elif not grundstuecke:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Start bei Leer")
+        print_fehler_nachricht("ElderAnfaengerSRM", "Start (GS-Liste leer)")
     elif not grundstuecke_ok():
-        print_terminal_nachricht("ElderAnfaengerSRM", "Start bei GSFehler")
+        print_fehler_nachricht("ElderAnfaengerSRM", "Start (GS-Liste fehlerhaft)")
     else:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Start")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Start (wird gestartet)")
         stop = False
         pause = False
         kopier_thread = threading.Thread(target=kopieren_und_drucken)
         kopier_thread.start()
         index = 0
-        print_terminal_nachricht("ElderAnfaengerSRM", "Gestartet")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Start (ist gestartet)")
 
 
 def befehl_pause():
@@ -222,36 +222,37 @@ def befehl_pause():
     global interne_clipboard
 
     if stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Pause bei Stopp")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Pause (Programm gestoppt)")
     elif pause:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Pause bei Pause")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Pause (bereits pausiert)")
     else:
         pause = True
         interne_clipboard = pyperclip.paste()
-        print_terminal_nachricht("ElderAnfaengerSRM", "Pause", [interne_clipboard])
+        print_terminal_nachricht("ElderAnfaengerSRM", "Pause (wird pausiert)", [interne_clipboard])
 
 
 def befehl_weiter():
     global pause
 
     if stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter bei Stopp")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter (Programm gestoppt)")
     elif not pause:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter bei Fluss")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter (läuft bereits)")
     else:
         pause = False
         pyperclip.copy(interne_clipboard)
-        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter", [interne_clipboard])
+        print_terminal_nachricht("ElderAnfaengerSRM", "Weiter (läuft weiter)", [interne_clipboard])
 
 
 def befehl_status():
     if stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Status bei Stopp")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Status (Programm gestoppt)")
     else:
         print("")
-        print_terminal_nachricht("ElderAnfaengerSRM", "Status")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Status (wird ausgegeben)")
         print_hrule()
 
+        # Grundstücksliste ausgeben
         for i, grundstueck in enumerate(grundstuecke):
             if i < index:
                 print(Fore.LIGHTBLACK_EX + grundstueck + Fore.RESET)
@@ -260,8 +261,9 @@ def befehl_status():
             else:
                 print(grundstueck)
 
+        # Übrigen Statistiken ausgeben
         print("")
-        print_terminal_nachricht("ElderAnfaengerSRM", "Status ToDo",
+        print_terminal_nachricht("ElderAnfaengerSRM", "Status (Statistik)",
                                  [str(len(grundstuecke) - index), str(int(100 * index / len(grundstuecke)))])
         print_hrule()
         print("")
@@ -272,15 +274,15 @@ def befehl_stop():
     global grundstuecke
 
     if stop:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Stop bei Gestoppt")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Stop (bereits gestoppt)")
     else:
-        print_terminal_nachricht("ElderAnfaengerSRM", "Stop")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Stop (wird gestoppt)")
         stop = True
         listener.stop()       # Den Tastaturzuhörer beenden.
         kopier_thread.join()  # Warten, dass der Kopierthread beendet ist.
         grundstuecke = []     # Liste der Grundstücke leeren.
         pyperclip.copy("")    # Zwischenablage leeren.
-        print_terminal_nachricht("ElderAnfaengerSRM", "Gestoppt")
+        print_terminal_nachricht("ElderAnfaengerSRM", "Stop (ist gestoppt)")
 
 
 def befehl_exit():
@@ -303,7 +305,6 @@ def befehl_hilfe():
 
 
 def main():
-    konfigurieren()
     print_beschreibung("ElderAnfaengerSRM")
     print("")
     print_hilfe("ElderAnfaengerSRM")
@@ -319,7 +320,7 @@ def main():
         befehl = input("Gebe den nächsten Befehl ein: ")
         reaktionszeit = time.time() - reaktionszeit
         if reaktionszeit <= 0.01:
-            print_fehler_nachricht("ElderAnfaengerSRM", "Eingabe bei Aufforderung")
+            print_befehl_nur_nach_aufforderung()
         elif befehl == "link öffnen":
             befehl_link_oeffnen()
         elif befehl == "grundstücke eingeben":
@@ -346,4 +347,5 @@ def main():
 
 
 if __name__ == "__main__":
+    konfigurieren()
     main()
