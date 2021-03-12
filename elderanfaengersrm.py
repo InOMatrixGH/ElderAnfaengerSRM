@@ -71,49 +71,46 @@ def kopieren_und_drucken():
     ToastNotifier().show_toast("ElderAnfängerSRM", "Fertig\nZwischenablage geleert", duration=8, icon_path="icon.ico")
 
 
-def grundstuecke_ok():
-    grundstuecke_copy = grundstuecke.copy()
+def grundstueck_ok(gs):
     list_numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    try:
+        # Auf die 8 Komponenten herunterbrechen
+        gs = gs[1:-1].split("\",\"")
 
-    for gs in grundstuecke_copy:
-        try:
-            # Auf die 8 Komponenten herunterbrechen
-            gs = gs[1:-1].split("\",\"")
-
-            # Komponenten 2, …, 7 auf Zahlen überprüfen.
-            for i in range(1, 7):
-                if not gs[i][0] in ["-"] + list_numbers:
+        # Komponenten 2, …, 7 auf Zahlen überprüfen.
+        for i in range(1, 7):
+            if not gs[i][0] in ["-"] + list_numbers:
+                return False
+            for char in gs[i][1:]:
+                if char not in list_numbers:
                     return False
-                for char in gs[i][1:]:
-                    if char not in list_numbers:
-                        return False
 
-            # Komponente 1
-            gs[0] = gs[0].split("-")
-            if len(gs[0]) != 3:
-                return False
-            if gs[0][0] != "anf":
-                return False
-            for i in range(1, 3):
-                for char in gs[0][i]:
-                    if char not in list_numbers:
-                        return False
-
-            # Komponente 8
-            gs[7] = gs[7].split(" ")
-            if len(gs[7]) != 4:
-                return False
-            if gs[7][0] != "/tp":
-                return False
-            for i in range(1, 4):
-                if not gs[7][i][0] in ["-"] + list_numbers:
-                    return False
-                for char in gs[7][i][1:]:
-                    if char not in list_numbers:
-                        return False
-
-        except IndexError:
+        # Komponente 1
+        gs[0] = gs[0].split("-")
+        if len(gs[0]) != 3:
             return False
+        if gs[0][0] != "anf":
+            return False
+        for i in range(1, 3):
+            for char in gs[0][i]:
+                if char not in list_numbers:
+                    return False
+
+        # Komponente 8
+        gs[7] = gs[7].split(" ")
+        if len(gs[7]) != 4:
+            return False
+        if gs[7][0] != "/tp":
+            return False
+        for i in range(1, 4):
+            if not gs[7][i][0] in ["-"] + list_numbers:
+                return False
+            for char in gs[7][i][1:]:
+                if char not in list_numbers:
+                    return False
+
+    except IndexError:
+        return False
 
     return True
 
@@ -123,10 +120,21 @@ def grundstuecke_ok():
 
 def update_label(anzahl, textfeld):
     global grundstuecke
+    fehlerhafte_zeilen = False
     inhalt = textfeld.get("1.0", tkinter.END).split("\n")
     inhalt = [zeile for zeile in inhalt if zeile != ""]
     grundstuecke = inhalt
-    if grundstuecke_ok():
+
+    for i, gs in enumerate(grundstuecke):
+        if grundstueck_ok(gs):
+            textfeld.tag_add("zeile_" + str(i + 1), str(i + 1) + ".0", str(i + 1) + ".end")
+            textfeld.tag_config("zeile_" + str(i + 1), foreground="white")
+        else:
+            fehlerhafte_zeilen = True
+            textfeld.tag_add("zeile_" + str(i + 1), str(i + 1) + ".0", str(i + 1) + ".end")
+            textfeld.tag_config("zeile_" + str(i + 1), foreground="red")
+
+    if not fehlerhafte_zeilen:
         anzahl.config(fg="black", text="Länge der Liste: " + str(len(inhalt)) + " Zeilen.")
     else:
         anzahl.config(fg="red", text="Die Liste enthält ungültige Zeilen.")
@@ -201,12 +209,15 @@ def befehl_start():
     global index
     global kopier_thread
 
+    for gs in grundstuecke:
+        if not grundstueck_ok(gs):
+            print_fehler_nachricht("ElderAnfaengerSRM", "Start (GS-Liste fehlerhaft)")
+            return
+
     if not stop:
         print_terminal_nachricht("ElderAnfaengerSRM", "Start (bereits gestartet)")
     elif not grundstuecke:
         print_fehler_nachricht("ElderAnfaengerSRM", "Start (GS-Liste leer)")
-    elif not grundstuecke_ok():
-        print_fehler_nachricht("ElderAnfaengerSRM", "Start (GS-Liste fehlerhaft)")
     else:
         print_terminal_nachricht("ElderAnfaengerSRM", "Start (wird gestartet)")
         stop = False
