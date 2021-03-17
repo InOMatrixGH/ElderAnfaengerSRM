@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{Einleitung}{}% 1
+\BOOKMARK [1][-]{section.2}{Dokumentation des Moduls elderanfaengersrm.py}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Importe externer Bibliotheken}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Globale Variablen}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Hauptfunktionen}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Hilfsfunktionen}{section.2}% 6
+\BOOKMARK [1][-]{section.3}{Dokumentation des Moduls terminalausgaben.py}{}% 7
+\BOOKMARK [2][-]{subsection.3.1}{Importe externer Bibliotheken}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.2}{Globale Variablen}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.3}{Funktionen zum Lesen der Konfigurationsdatei}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.4}{Feste Ausgaben}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.5}{Variable Ausgaben}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.6}{Funktionen zur Ausgabe und Erstellung von Tabellen}{section.3}% 13

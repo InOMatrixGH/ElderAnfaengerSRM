@@ -1,0 +1,14 @@
+\babel@toc {ngerman}{}
+\contentsline {section}{\numberline {1}Einleitung}{1}{section.1}%
+\contentsline {section}{\numberline {2}Dokumentation des Moduls \texttt {elderanfaengersrm.py}}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Importe externer Bibliotheken}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Globale Variablen}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Hauptfunktionen}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Hilfsfunktionen}{6}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Dokumentation des Moduls \texttt {terminalausgaben.py}}{9}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Importe externer Bibliotheken}{9}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Globale Variablen}{9}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Funktionen zum Lesen der Konfigurationsdatei}{9}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Feste Ausgaben}{9}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Variable Ausgaben}{9}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Funktionen zur Ausgabe und Erstellung von Tabellen}{9}{subsection.3.6}%

@@ -1,0 +1,374 @@
+\documentclass{article}
+\usepackage[top=25mm, left=35mm, right=25mm, bottom=20mm]{geometry}
+\title{\textbf{Dokumentation zu ElderAnf\"angerSRM}}
+\author{InOMatrix,\\ Henker von ElderCraft}
+\date{\today}
+
+\usepackage[ngerman]{babel}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
+\tikzstyle{decision} = [rectangle, draw, fill=red!20, text width=2cm, text centered, rounded corners, minimum height=1cm]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=4.5cm, text centered, rounded corners, minimum height=1cm]
+\tikzstyle{init} = [rectangle, draw, fill=green!20, text width=4.5cm, text centered, rounded corners, minimum height=1cm]
+\tikzstyle{cloud} = [draw, ellipse, fill=green!20, node distance=3cm, minimum height=1cm]
+\tikzstyle{line} = [draw, -latex']
+
+\usepackage{xcolor}
+\usepackage{listings}
+\definecolor{keywords}{RGB}{0,0,128}
+\definecolor{comments}{RGB}{128,128,128}
+\definecolor{parameters}{RGB}{0,0,0}
+\definecolor{string}{RGB}{0,128,128}
+\lstset{language=Python,
+		basicstyle=\ttfamily\small,
+		keywordstyle=\color{keywords},
+		commentstyle=\color{comments},
+		stringstyle=\color{string},
+		showstringspaces=false,
+		identifierstyle=\color{parameters},
+		}
+\setlength{\parindent}{0pt}
+
+\usepackage{paralist}
+\newcommand{\initem}[2]{\item[\hspace{0.5em} {\normalfont\ttfamily{#1}} {\normalfont\itshape{(#2)}}]}
+\newcommand{\outitem}[1]{\item[\hspace{0.5em} \normalfont\itshape{(#1)}]}
+\newcommand{\bfpara}[1]{\noindent \textbf{#1:}\,}
+
+
+\begin{document}
+\maketitle
+\tableofcontents
+\bigskip
+
+\hrule
+\vfill
+
+\section{Einleitung}
+Dieses Programm hilft dabei, das Setzen von Verkaufsschildern auf Anf\"angergrundst\"ucken zu erleichtern. Dies geschieht dadurch, dass aus einer gegebenen Liste von Grundst\"ucken dessen Teleport-Befehle in die Zwischenablage kopiert werden. Au{\ss}erdem stellt das Programm eine Art Makro f\"ur die Zeilen, die auf die Verkaufsschilder geschrieben werden, zur Verf\"ugung. Wie genau das funktioniert, wird im Benutzerhandbuch erkl\"art.\\
+
+Dieses Dokument beschreibt lediglich, wie das Programm technisch aufgebaut ist, indem alle Funktionen genau erkl\"art werden. Insgesamt ist ElderAnf\"angerSRM in drei Komponenten aufgeteilt:
+\begin{itemize}
+	\item \texttt{elderanfaengersrm.py} -- das Hauptmodul;
+	\item \texttt{terminalausgaben.py} -- Modul f\"ur alle Ausgaben auf der Konsole;
+	\item \texttt{terminalausgaben.ini} -- Konfigurationsdatei, hier k\"onnen die Ausgaben ver\"andert werden.
+\end{itemize}
+Diese Dokumentation bezieht sich einzig und allein auf die beiden Python-Module. Wie die Konfigurationsdatei bearbeitet werden kann, steht im Benutzerhandbuch.\newpage
+
+%%%% Doku ElderAnfängerSRM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Dokumentation des Moduls \texttt{elderanfaengersrm.py}}
+Dieses ist das Hauptmodul, welches beim Programmstart aufgerufen wird. In dem Modul ist eine \texttt{main()}-Methode implementiert. Wird das Programm gestartet, werden zuerst die Ausgaben auf der Konsole konfiguriert (siehe hierzu \hyperref[subsubsec:konfigurieren]{\texttt{konfigurieren()}}, und anschlie{\ss}end die main-Methode ausgef\"uhrt.\\[22pt]
+
+\subsection{Importe externer Bibliotheken}
+In der nachfolgenden Liste stehen die Bibliotheken, die im Modul importiert werden und, wof\"ur sie gebraucht werden:
+\begin{itemize}
+	\item \texttt{time} -- Bestimmen der Reaktionszeit, nachdem das Programm in der Konsole nach dem n\"achsten Befehl fragt. Das verhindert, dass ungewollte Eingaben in der Konsole verarbeitet werden, sollte das Programm gerade nicht nach einem Befehl fragen. Das kommt vor, wenn sich das Fenster \"offnet, um Grundst\"ucksdaten dort hineinzuschreiben.
+	\item \texttt{pynput} -- Manipuliert die Tastatureingabe. Es wird f\"ur die Makros `\textit{[verkaufen]}' und `\textit{BuildingDave}' verwendet. Durch Dr\"ucken der Einfg-Taste werden diese Worte unter gewissen Umst\"anden geschrieben.
+	\item \texttt{tkinter} -- Modul zum \"Offnen und Erstellen des Fensters, in das die Grundst\"ucksdaten hineinkopiert werden.
+	\item \texttt{pyperclip} -- Manipuliert die Zwischenablage. Durch Dr\"ucken der Einfg-Taste wird unter gewissen Umst\"anden der n\"achste Teleport-Befehl in die Zwischenablage kopiert. Auch, nachdem der Befehl `\textit{weiter}' eingegeben wird, wird die Zwischenablage ver\"andert. Nachdem alle Grundst\"ucke aus der Liste abgearbeitet sind, wird die Zwischenablage geleert.
+	\item \texttt{threading} -- Modul zum Erstellen von Threads. Im Main-Thread werden die Befehle in der Konsole entgegen genommen. Sollte der Befehl `\textit{start}' eingegeben worden sein, wird das Programm, welches bei Bet\"atigen der Einfg-Taste Teleport-Befehle kopiert bzw. Schildzeilen schreibt, in einem separaten Thread laufen.
+	\item \texttt{webbrowser} -- Modul zum \"Offnen von Internetadressen in einem Browser. Das wird genutzt, wenn man den Befehl `\textit{link öffnen}' eingibt.
+	\item \texttt{terminalsausgaben} -- Modul, dass die Ausgaben auf der Konsole formatiert.
+	\item \texttt{win10toast} -- Modul zum Erzeugen der Windows-Notification. Diese erscheint immer, wenn ein Teleport-Befehl in die Zwischenablage kopiert wird. Sie erscheint auch am Ende, wenn alle Grundst\"ucke abgearbeitet sind.\\[22pt]
+\end{itemize}
+
+\subsection{Globale Variablen}\label{subsec:globale_variablen}
+Insgesamt verf\"ugt das Python-Modul \texttt{elderanfaengersrm.py} \"uber sieben globale Variablen:
+\begin{itemize}
+	\initem{pause}{bool} Der Wert gibt an, ob das Programm (der Thread), das die Schildzeilen schreibt und Teleport-Befehle kopiert, pausiert ist.
+	\initem{listener}{pynput.keyboard.Listener} Ein weiterer Thread, der auf Tastenaschl\"age reagiert. Im Programm macht der Thread nichts anderes, als auf die Einfg-Taste zu reagieren.
+	\initem{kopier\_thread}{threading.Thread} Der Thread, in dem das Schreiben der Schildzeilen bzw. Kopieren der Teleport-Befehle vonstatten geht.
+	\initem{grundstuecke}{list} Die Liste aller Grundst\"ucke, die in dem Fenster eingegeben wurde. Dabei enth\"alt die Liste einfach jede nichtleere Zeile der Eingabe als Listenelement.
+	\initem{index}{int} Der Wert gibt den Index aus \texttt{grundstuecke} an, dessen Grundst\"uck gerade bearbeitet wird.
+	\initem{stop}{bool} Der Wert gibt an, ob der Thread, das die Schildzeilen schreibt usw. gestoppt werden soll bzw. gestoppt ist.
+	\initem{interne\_clipboard}{str} Der Wert wird mit dem Teleport-Befehl des aktuellen Grundst\"uckes, an dem gearbeitet wird, \"uberschrieben, sofern der Befehl `\textit{pause}' eingegeben wird. Der Inhalt wird in die Zwischenablage kopiert, wird der Befehl `\textit{weiter}' eingegeben.\\[22pt]
+\end{itemize}
+
+%%%% Hauptfunktionen von ElderAnfängerSRM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Hauptfunktionen}
+
+\subsubsection*{\texttt{befehl\_link\_oeffnen()}}
+Diese Funktion \"offnet den Link git.eldercom.de in einem Browser und gibt eine Nachricht in der Konsole aus, dass der Link ge\"offnet wird.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\[11pt]
+
+\subsubsection*{\texttt{befehl\_grundstuecke\_eingeben()}}
+Diese Funktion \"offnet ein Fenster, in das Zeilen aus der \texttt{worldguard.csv}-Datei (von git.eldercom.de) hineinkopiert werden k\"onnen. In diesem Fenster gibt es die folgenden\\
+
+\bfpara{Steuerelemente}
+\begin{itemize}
+	\initem{textfeld}{Text} Das Textfeld, in das hineingeschrieben werden kann. Dort werden die Zeilen der zu bearbeitenden Grundst\"ucke hineinkopiert.
+	\initem{scrollbar}{Scrollbar} Eine Scrollbar, um in dem Textfeld nach oben und nach unten zu scrollen.
+	\initem{speichern}{Button} Der `\textit{Speichern und Beenden}'-Button. Durch einen Klick darauf wird die Funktion \hyperref[subsubsec:speichern_beenden]{\texttt{speichern\_beenden(fenster, textfeld)}} aufgerufen.
+	\initem{umkehren}{Button} Der `\textit{Reihenfolge umkehren}'-Button. Durch einen Klick darauf wird die Funktion \hyperref[subsubsec:reihenfolge_umkehren]{\texttt{reihenfolge\_umkehren(textfeld)}} aufgerufen.
+	\initem{updaten}{Button} Der `\textit{L\"ange aktualisieren}'-Button. Durch einen Klick darauf wird die Funktion \hyperref[subsubsec:update_label]{\texttt{update\_label(anzahl, textfeld)}} aufgerufen.
+	\initem{anzahl}{Label} Das Label, dass die Anzahl an nichtleeren Zeilen in dem Textfeld angibt. Es gibt auch an, ob die Eingabe im Textfeld syntaktisch in Ordnung ist. Damit das Label aktualisiert wird, muss auf den entsprechenden Button geklickt werden.\\
+\end{itemize}
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Sobald das Fenster ge\"offnet bzw. geschlossen wird, erscheint dazu jeweils eine passende Nachricht in der Konsole.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_start()}}
+Diese Funktion startet den Thread \hyperref[subsec:globale_variablen]{\texttt{kopier\_thread}}, der die Teleport-Befehle kopiert und Schildzeilen schreibt. Der Thread arbeitet die Funktion \hyperref[subsubsec:kopieren_und_drucken]{\texttt{kopieren\_und\_drucken()}} ab.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Zun\"achst wird \"uberpr\"uft, ob die Liste mit den Grundst\"ucken \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}} syntaktisch korrekt ist. Falls nicht, wird der Thread nicht gestartet und es gibt eine passende Fehlerausgabe. Anschlie{\ss}end wird \"uberpr\"uft, ob der Thread nicht schon gestartet wurde (das hei{\ss}t bereits l\"auft) oder die Liste der Grundst\"ucke keine Eintr\"age besitzt. In jedem der F\"alle wird eine passende Ausgabe in der Konsole erscheinen und nichts weiter passieren. Die Abfrage, ob der Thread bereits l\"auft, geschieht \"uber die globale Variable \hyperref[subsec:globale_variablen]{\texttt{stop}}.\\
+
+Trifft keiner der obigen F\"alle zu, wird der Thread gestartet. Dabei werden die folgenden globalen Variablen gesetzt:
+\begin{lstlisting}
+stop  = False
+pause = False
+index = 0
+\end{lstlisting}
+Es gibt dabei Ausgaben im Terminal, wenn der Thread gestartet wird und ob er erfolgreich gestartet wurde.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_pause()}}
+Diese Funktion setzt die globale Variable \hyperref[subsec:globale_variablen]{\texttt{pause}} auf \texttt{True} und speichert den aktuellen Inhalt der Zwischenablage intern ab in \hyperref[subsec:globale_variablen]{\texttt{interne\_clipboard}}.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Die Variable \hyperref[subsec:globale_variablen]{\texttt{pause}} wird in \hyperref[subsubsec:on_release]{\texttt{on\_release(key)}} insbesondere abgefragt und solange sie auf \texttt{True} steht, gibt sie auch nicht den Wert \texttt{False} zur\"uck. Sollte \hyperref[subsec:globale_variablen]{\texttt{pause}} bereits auf \texttt{True} stehen, wird in der Konsole ausgegeben, dass das Programm bereits pausiert ist. Sollte \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True} sein, das hei{\ss}t der Thread, der die Teleport-Befehle kopiert usw. gar nicht existieren und laufen, wird ebenfalls eine Nachricht ausgegeben, dass es nichts zu pausieren gibt.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_weiter()}}
+Diese Funktion setzt die globale Variable \hyperref[subsec:globale_variablen]{\texttt{pause}} auf \texttt{False} und legt den Inhalt von \hyperref[subsec:globale_variablen]{\texttt{interne\_clipboard}} in die Zwischenablage.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Sollte \hyperref[subsec:globale_variablen]{\texttt{pause}} bereits auf \texttt{False} stehen, wird in der Konsole ausgegeben, dass das Programm nicht pausiert war. Sollte \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True} sein, das hei{\ss}t der Thread, der die Teleport-Befehle kopiert usw. gar nicht existieren und laufen, wird ebenfalls eine Nachricht ausgegeben, dass nichts weiterlaufen kann.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_status()}}
+Diese Funktion gibt in der Konsole die gesamte Liste der Grundst\"ucke aus und die Zeilen werden markiert, damit man sieht, welche bereits abgehakt sind und welche nicht.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Sollte \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True} sein, das hei{\ss}t der Thread, der das Kopieren und Schreiben von Schildzeilen managt gar nicht laufen bzw. existieren, wird eine Meldung in der Konsole erscheinen, dass es keinen Status gibt. Andernfalls werden alle Eintr\"age aus \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}} ausgegeben; jeweils eine eigene Zeile pro Listeneintrag. Alle Eintr\"age von \texttt{0} bis \hyperref[subsec:globale_variablen]{\texttt{index}}\texttt{-1} werden dunkelgrau ausgegeben, der Eintrag am Index \hyperref[subsec:globale_variablen]{\texttt{index}} wird in gr\"un ausgegeben und alle weiteren Eintr\"age in der Liste werden in normaler Schriftfarbe dargestellt.\\
+
+Des Weiteren erscheint die Anzahl der Grundst\"ucke, die noch bearbeitet werden m\"ussen und der entsprechende prozentuale Anteil.\\[11pt] 
+
+\subsubsection*{\texttt{befehl\_stop()}}
+Diese Funktion stoppt den Thread, der die Teleport-Befehle kopiert und Schildzeilen schreibt.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Sollte \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True} sein, wird eine Nachricht in der Konsole erscheinen, dass das Programm bereits gestoppt ist. Andernfalls wird \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = False} gesetzt und der Thread \hyperref[subsec:globale_variablen]{\texttt{listener}}, der auf die Tastenanschl\"age reagiert, gestoppt. Anschlie{\ss}end wird gewartet, dass auch der Thread \hyperref[subsec:globale_variablen]{\texttt{kopier\_thread}} geschlossen wird. Dann wird die Liste der Grundst\"ucke, also \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}}, geleert, die Zwischenablage ebenfalls.\\
+
+Zus\"atzlich erscheinen Ausgaben auf dem Terminal, wenn das Programm gestoppt wird und erfolgreich gestoppt wurde.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_exit()}}
+Diese Funktion beendet alle laufenden Threads und schlie{\ss}t das Programm \texttt{ElderAnfaengerSRM} voll-st\"andig.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Sollte \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = False} sein, das hei{\ss}t der Thread, in dem das Kopieren der Port-Befehle und Schreiben der Schildzeilen gemanagt wird noch laufen, so wird er beendet, indem \hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True} gesetzt wird, \hyperref[subsec:globale_variablen]{\texttt{listener}} gestoppt wird und auf \hyperref[subsec:globale_variablen]{\texttt{kopier\_thread}} gewartet wird, bis er beendet ist.\\[11pt]
+
+\subsubsection*{\texttt{befehl\_hilfe()}}
+Diese Funktion gibt die Hilfetabelle mit allen verf\"ugbaren Befehlen in der Konsole aus.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\[22pt]
+
+%%%% Hilfsfunktionen von ElderAnfängerSRM %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Hilfsfunktionen}
+
+\subsubsection*{\texttt{on\_release(key)}}\label{subsubsec:on_release}
+Diese Funktion liefert die R\"uckgabe \texttt{False}, wenn die Einfg-Taste auf der Tastatur freigelassen wird.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{key}{pynput.keyboard.Key} Die Taste, die losgelassen wird.
+\end{compactdesc}
+\bfpara{Output}
+\begin{compactdesc}
+	\initem{}{bool} False, wenn die Einfg-Taste losgelassen wird und \hyperref[subsec:globale_variablen]{\texttt{pause}}\texttt{ = False} ist. In jedem anderen Fall gibt die Funktion gar keinen Wert zur\"uck.
+\end{compactdesc}
+\leavevmode\\[11pt]
+
+\subsubsection*{\texttt{wait\_einfg()}}\label{subsubsec:wait_einfg}
+Diese Funktion \glqq wartet\grqq{} darauf, dass die Taste Einfg gedr\"uckt und losgelassen wird. Sobald dies geschehen ist, endet die Funktion ohne einen R\"uckgabe-Parameter.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Wird diese Funktion aufgerufen, wird die globale Variable \hyperref[subsec:globale_variablen]{\texttt{listener}} definiert mit dem Parameter \texttt{on\_release = }\hyperref[subsubsec:on_release]{\texttt{on\_release}}. Sobald die Funktion \hyperref[subsubsec:on_release]{\texttt{on\_release(key)}} also den Wert \texttt{False} liefert, wird \hyperref[subsec:globale_variablen]{\texttt{listener}} beendet und die Funktion wird verlassen. Das gleiche passiert auch, wenn \hyperref[subsec:globale_variablen]{\texttt{listener}} von einer Funktion au{\ss}erhalb gestoppt wird.\\[11pt]
+
+\subsubsection*{\texttt{windows\_notification(gs)}}\label{subsubsec:windows_notification}
+Diese Funktion erstellt und gibt eine Windows-Benachrichtigung aus, dass ein Teleport-Befehl in die Zwischenablage kopiert wurde. In der Benachrichtigung steht ebenfalls die dazugeh\"orige Grundst\"ucks-ID.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{gs}{str} Die Zeile aus \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}}, zu der die Benachrichtigung erscheint.
+\end{compactdesc}
+\bfpara{Returns}\textit{None}\\[11pt]
+
+\subsubsection*{\texttt{kopieren\_und\_drucken()}}\label{subsubsec:kopieren_und_drucken}
+Diese Funktion geht jedes Grundst\"uck (also jeden Eintrag) aus \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}} durch und kopiert den Teleport-Befehl in die Zwischenablage und schreibt Schildzeilen, sofern die Einfg-Taste bet\"atigt wird.\\
+
+\bfpara{Input}-
+
+\bfpara{Returns}\textit{None}\\
+
+Der Ablauf des Programms l\"asst sich durch das folgende Diagramm veranschaulichen, wobei es im gr\"unen Rechteck startet:
+\begin{center}
+	\begin{tikzpicture}[node distance = 2cm]
+		\node[init]                                        (next)  {n\"achstes gs in \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}}};
+		\node[block, below of=next]                        (index) {weise \hyperref[subsec:globale_variablen]{\texttt{index}} neu zu};
+		\node[block, below of=index]                       (copy)  {kopiere Teleport-Befehl in Zwischenablage und \hyperref[subsubsec:windows_notification]{\texttt{windows\_notification(gs)}}};
+		\node[block, below of=copy]                        (sell)  {schreibe `\textit{[verkaufen]}'};
+		\node[block, below of=sell]                        (dave)  {schreibe `\textit{BuildingDave}'};
+		\node[decision, below right=0cm and 2cm of index]  (stop1) {\hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True}?};
+		\node[decision, below right=0cm and 2cm of copy]   (stop2) {\hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True}?};
+		\node[decision, below right=0cm and 2cm of sell]   (stop3) {\hyperref[subsec:globale_variablen]{\texttt{stop}}\texttt{ = True}?};
+		\node[cloud, right of=stop2]                       (ret)   {return};
+		\node[decision, right of=ret, node distance=3.5cm] (ready) {gibt es noch weitere gs?};
+
+		\path[line] (next)  -- (index);
+		\path[line] (index) -| node[left=0.2cm,fill=white] {\hyperref[subsubsec:wait_einfg]{\texttt{wait\_einfg()}}} (stop1);
+		\path[line] (stop1) -| node[right=3cm,fill=white]  {nein}                                                    (copy);
+		\path[line] (stop1) -| node[fill=white]            {ja}                                                      (ret);
+		\path[line] (copy)  -| node[left=0.2cm,fill=white] {\hyperref[subsubsec:wait_einfg]{\texttt{wait\_einfg()}}} (stop2);
+		\path[line] (stop2) -| node[right=3cm,fill=white]  {nein}                                                    (sell);
+		\path[line] (stop2) -- node[fill=white]            {ja}                                                      (ret);
+		\path[line] (sell)  -| node[left=0.2cm,fill=white] {\hyperref[subsubsec:wait_einfg]{\texttt{wait\_einfg()}}} (stop3);
+		\path[line] (stop3) -| node[right=3cm,fill=white]  {nein}                                                    (dave);
+		\path[line] (stop3) -| node[fill=white]            {ja}                                                      (ret);
+		\path[line] (dave)  -|                                                                                       (ready);
+		\path[line] (ready) -- node[fill=white]            {nein}                                                    (ret);
+		\path[line] (ready) |- node[fill=white]            {ja}                                                      (next);
+	\end{tikzpicture}
+\end{center}
+\leavevmode\\[11pt]
+
+\subsubsection*{\texttt{grundstueck\_ok(gs)}}\label{subsubsec:grundstueck_ok}
+Diese Funktion untersucht, ob ein String dem syntaktischen Aufbau einer Zeile aus \texttt{worldguard.csv} entspricht. Die allgemeine Syntax lautet `\texttt{"{}anf-XXX-XXX","Y","Y","Y","Y","Y","Y","{}/tp Y Z Y"}', wobei f\"ur jedes \texttt{X} eine beliebige Ziffer, f\"ur jedes \texttt{Y} eine beliebige ganze Zahl und f\"ur das \texttt{Z} eine beliebige positive Zahl eingesetzt wird.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{gs}{str} Die Zeichenfolge, die untersucht wird, ob sie dem obigen Aufbau entspricht.
+\end{compactdesc}
+\bfpara{Output}
+\begin{compactdesc}
+	\initem{}{bool} True genau dann, wenn \texttt{gs} syntaktisch dem Aufbau entspricht.
+\end{compactdesc}
+\leavevmode\\[11pt]
+
+\subsubsection*{\texttt{update\_label(anzahl, textfeld)}}\label{subsubsec:update_label}
+Diese Funktion aktualisiert das Label, das die Anzahl an Zeilen in dem Textfeld angibt. Es zeigt auch an, falls es syntaktische Fehler in der Liste gibt.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{anzahl}{tkinter.Label} Das Label, dass die Zeilenanzahl angibt.
+	\initem{textfeld}{tkinter.Text} Das Textfeld, in dem der Text steht der auf Zeilenanzahl \"uberpr\"uft wird.
+\end{compactdesc}
+\bfpara{Output}{\textit{None}}\\
+
+Der Inhalt aus dem Textfeld wird ausgelesen und in einer Liste gespeichert, die jede Zeile aus dem Textfeld als Listeneintrag enth\"alt. Nun wird jeder Eintrag aus der Liste \"uberpr\"uft mithilfe der Funktion \hyperref[subsubsec:grundstueck_ok]{\texttt{grundstueck\_ok(gs)}}:
+\begin{lstlisting}
+for zeile in textfeld:
+    if not (zeile == "" or grundstuecke_ok(zeile)):
+        setze schriftfarbe der zeile rot
+    else:
+        setze schriftfarbe der zeile weiss
+\end{lstlisting}
+Jede syntaktisch fehlerhafte Zeile wird also im Textfeld rot markiert. Sollte es eine solche Zeile geben, steht im Label in rot, dass die Texteingabe Fehler enth\"alt. Sollte es keine rot markierte Zeile geben, steht im Label die Anzahl der nichtleeren Zeilen.\\[11pt]
+
+\subsubsection*{\texttt{reihenfolge\_umkehren(textfeld)}}\label{subsubsec:reihenfolge_umkehren}
+Diese Funktion kehrt die Reihenfolge der Zeilen der Eingabe im Textfeld um.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{textfeld}{tkinter.Text} Das Textfeld, in dem der Inhalt steht.
+\end{compactdesc}
+\bfpara{Output}{\textit{None}}\\
+
+Der Inhalt aus dem Textfeld wird ausgelesen und in einer Liste zwischengespeichert, die jede Zeile aus dem Textfeld als Listeneintrag enth\"alt. Leerzeilen werden dabei ignoriert, also am Ende gar nicht mehr mit ausgegeben. Anschlie{\ss}end wird der Inhalt des Textfeldes gel\"oscht. Dann wird der Inhalt neu gesetzt, indem die Liste r\"uckw\"arts abgelaufen wird und f\"ur jeden einzelnen Eintrag eine neue Zeile schreibt.\\[11pt]
+
+\subsubsection*{\texttt{speichern\_beenden(fenster, textfeld)}}\label{subsubsec:speichern_beenden}
+Diese Funktion speichert die Eingabe eines Textes aus einem Fenster und beendet es.\\
+
+\bfpara{Input}
+\begin{compactdesc}
+	\initem{fenster}{tkinter.Tk} Das Fenster, welches nach Speichern des Textes aus dem Textfeld geschlossen wird.
+	\initem{textfeld}{tkinter.Text} Das Textfeld, dessen Inhalt gespeichert werden soll.
+\end{compactdesc}
+\bfpara{Output}{\textit{None}}\\
+
+Der Inhalt wird in die globale Variable \hyperref[subsec:globale_variablen]{\texttt{grundstuecke}} gespeichert. Jede Zeile des Inhaltes spiegelt dabei einen Listeneintrag wider. Leerzeilen werden allerdings ignoriert.\newpage
+
+%%%% Doku Terminalausgaben %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Dokumentation des Moduls \texttt{terminalausgaben.py}}
+
+\subsection{Importe externer Bibliotheken}
+
+\subsection{Globale Variablen}
+
+%%%% Konfig-Funktionen von Terminalausgaben %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Funktionen zum Lesen der Konfigurationsdatei}
+
+\subsubsection*{\texttt{konfigurieren()}}\label{subsubsec:konfigurieren}
+
+\subsubsection*{\texttt{to\_color\_code(farbeingabe)}}\label{subsubsec:to_color_code}
+
+%%%% Feste Ausgaben von Terminalausgaben %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Feste Ausgaben}
+
+\subsubsection*{\texttt{print\_hrule()}}
+
+\subsubsection*{\texttt{print\_befehl\_nur\_nach\_aufforderung()}}
+
+\subsubsection*{\texttt{print\_befehl\_invalide\_gebe\_hilfe\_ein()}}
+
+\subsubsection*{\texttt{print\_programm\_wird\_beendet()}}
+
+\subsubsection*{\texttt{print\_programm\_ist\_beendet()}}
+
+%%%% Variable Ausgaben von Terminalausgaben %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Variable Ausgaben}
+
+\subsubsection*{\texttt{print\_fehler\_nachricht(plugin, schluessel, args=None)}}\label{subsubsec:print_fehler_nachricht}
+
+\subsubsection*{\texttt{print\_terminal\_nachricht(plugin, schluessel, args=None)}}\label{subsubsec:print_terminal_nachricht}
+
+\subsubsection*{\texttt{print\_hilfe(plugin)}}
+
+\subsubsection*{\texttt{print\_beschreibung(plugin)}}
+
+%%%% Tabellenfunktionen von Terminalausgaben %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Funktionen zur Ausgabe und Erstellung von Tabellen}
+
+\subsubsection*{\texttt{erstelle\_tabelle(text)}}\label{subsubsec:erstelle_tabelle}
+
+\subsubsection*{\texttt{get\_umbrueche\_index(text, max_laenge)}}\label{subsubsec:get_umbrueche_index}
+
+\subsubsection*{\texttt{setze\_farbcodes(text, standardfarbe=Fore.RESET)}}\label{subsubsec:setze_farbcodes}
+
+\subsubsection*{\texttt{entferne\_farbcodes(text)}}\label{subsubsec:entferne_farbcodes}
+
+\end{document}
