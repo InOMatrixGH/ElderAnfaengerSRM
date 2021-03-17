@@ -119,13 +119,10 @@ def grundstueck_ok(gs):
 
 
 def update_label(anzahl, textfeld):
-    global grundstuecke
     fehlerhafte_zeilen = False
     inhalt = textfeld.get("1.0", tkinter.END).split("\n")
-    inhalt = [zeile for zeile in inhalt if zeile != ""]
-    grundstuecke = inhalt
 
-    for i, gs in enumerate(grundstuecke):
+    for i, gs in enumerate(inhalt):
         if grundstueck_ok(gs):
             textfeld.tag_add("zeile_" + str(i + 1), str(i + 1) + ".0", str(i + 1) + ".end")
             textfeld.tag_config("zeile_" + str(i + 1), foreground="white")
@@ -134,6 +131,7 @@ def update_label(anzahl, textfeld):
             textfeld.tag_add("zeile_" + str(i + 1), str(i + 1) + ".0", str(i + 1) + ".end")
             textfeld.tag_config("zeile_" + str(i + 1), foreground="red")
 
+    inhalt = [zeile for zeile in inhalt if zeile != ""]
     if not fehlerhafte_zeilen:
         anzahl.config(fg="black", text="Länge der Liste: " + str(len(inhalt)) + " Zeilen.")
     else:
